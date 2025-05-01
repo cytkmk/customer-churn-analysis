@@ -1,0 +1,198 @@
+---
+title: "churn_analysis.rmd"
+output: html_document
+date: "2025-05-01"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(caret)
+library(ggplot2)
+library(rpart)
+library(randomForest)
+library(janitor)
+```
+
+# 🛍️ What Drives Customer Loyalty? – An R-Based Behavioral Analysis
+
+## 📌 Project Summary
+This project explores customer behavior to identify key factors that influence loyalty and churn. Using R, I performed data cleaning, exploratory data analysis, predictive modeling, and business insight generation. 
+
+The goal is to provide actionable recommendations that help companies understand their customers better and reduce churn.
+
+---
+
+## 📊 Tools & Technologies
+- **Language:** R
+- **Libraries:** `tidyverse`, `ggplot2`, `dplyr`, `caret`, `rpart`, `randomForest`, `shiny`, `RMarkdown`
+- **Visualization:** ggplot2, shiny
+- **Modeling:** Logistic Regression, Decision Tree
+
+---
+
+## 📁 Dataset
+Source: [Kaggle – Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn)
+
+Size: ~7,000 entries  
+Features: Customer demographics, service usage, account info, churn flag
+
+---
+
+## 🔍 Key Questions
+- What customer features are most correlated with loyalty or churn?
+- Can we predict churn based on customer traits?
+- What actions might reduce churn?
+
+---
+
+## 📈 Highlights
+- Cleaned and preprocessed messy categorical variables
+- Visualized spending trends and churn distribution
+- Built and evaluated churn prediction models
+- Shared practical recommendations
+
+---
+## Data Overview
+```{r}
+data <- read.csv("~/Downloads/Telco-Customer-Churn.csv")
+glimpse(data)
+```
+
+## Data Cleaning
+```{r}
+data <- data %>%
+  clean_names() %>%
+  drop_na()
+```
+
+## Exploratory Data Analysis
+```{r}
+ggplot(data, aes(x=tenure, fill=churn)) +
+  geom_histogram(bins=30, position="dodge") +
+  labs(title="Tenure vs Churn")
+```
+
+## Modeling - Logistic Regression
+```{r} 
+# Convert churn to factor (if it's not already)
+data$churn <- as.factor(data$churn)
+
+# Check levels
+levels(data$churn)
+
+# Logistic regression with a factor response
+model <- glm(churn ~ tenure + contract + monthly_charges,
+             data = data,
+             family = "binomial")
+summary(model)
+
+```
+
+## Results 
+My model predicts whether a customer is likely to churn based on their tenure, contract type, and monthly charges. All predictors are statistically significant (p < 0.001), meaning their influence on churn is not due to chance.
+
+## 🔍 Coefficient-by-Coefficient Interpretation
+### 1. Intercept = -1.6006
+This is the baseline log-odds of churning for a customer with:
+
+0 tenure,
+
+a month-to-month contract,
+
+$0 monthly charges.
+
+Not directly interpretable alone, but it’s part of the full equation.
+
+### 2. Tenure = -0.0359
+Odds Ratio: exp(-0.0359) ≈ 0.965
+
+🗣️ “Each additional month a customer stays decreases the odds of churning by about 3.5%.”
+
+### 3. ContractOne year = -1.0574
+Odds Ratio: exp(-1.0574) ≈ 0.347
+
+🗣️ “Compared to month-to-month contracts, customers on a one-year contract are about 65% less likely to churn.”
+
+### 4. ContractTwo year = -1.9935
+Odds Ratio: exp(-1.9935) ≈ 0.136
+
+🗣️ “Compared to month-to-month, two-year contract customers are 86% less likely to churn.”
+
+### 5. Monthly Charges = +0.0286
+Odds Ratio: exp(0.0286) ≈ 1.029
+
+🗣️ “For every $1 increase in monthly charges, the odds of churn increase by about 2.9%.”
+
+This could indicate pricing sensitivity or dissatisfaction with value for money.
+
+📊 Model Fit Indicators
+Null Deviance: 8143.4 → model with no predictors
+
+Residual Deviance: 6143.5 → model reduced deviance by ~2000
+
+AIC = 6153.5 → lower is better; this is decent for this size dataset
+
+Conclusion: model fits the data much better than a random guess.
+
+## Conclusion
+Our logistic regression model identified key predictors of customer churn:
+
+Longer tenure significantly reduces churn risk (OR ≈ 0.965).
+
+Customers on one-year or two-year contracts are 65–86% less likely to churn than those on month-to-month plans.
+
+Higher monthly charges slightly increase churn likelihood, suggesting pricing may impact retention.
+
+All predictors were highly significant (p < 0.001), and the model explained a substantial portion of deviance, suggesting strong explanatory power.
+
+## Visualization Code 
+### 1. Effect of Tenure 
+```{r}
+ggplot(data, aes(x = tenure, fill = churn)) +
+  geom_histogram(position = "fill", bins = 30) +
+  labs(title = "Churn Rate by Tenure",
+       y = "Proportion", x = "Tenure (Months)") +
+  scale_fill_manual(values = c("No" = "#4CAF50", "Yes" = "#F44336")) +
+  theme_minimal()
+```
+### 2. Churn Rate by Contract Type
+```{r}
+ggplot(data, aes(x = contract, fill = churn)) +
+  geom_bar(position = "fill") +
+  labs(title = "Churn Rate by Contract Type",
+       y = "Proportion", x = "Contract Type") +
+  scale_fill_manual(values = c("No" = "#4CAF50", "Yes" = "#F44336")) +
+  theme_minimal()
+```
+### 3. Effect of Monthly Charges
+```{r}
+ggplot(data, aes(x = monthly_charges, fill = churn)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Monthly Charges Density by Churn Status",
+       x = "Monthly Charges ($)", y = "Density") +
+  scale_fill_manual(values = c("No" = "#4CAF50", "Yes" = "#F44336")) +
+  theme_minimal()
+```
+
+## 💼 Business Recommendations
+
+Based on the analysis, the following actions are recommended to reduce churn:
+
+1. **Incentivize Long-Term Contracts**
+   - Promote one- and two-year contracts with attractive offers (e.g., discounts, loyalty points).
+   - Consider auto-renewal features or early upgrade incentives to keep customers engaged.
+
+2. **Target New Customers Early**
+   - Since churn risk is higher during early tenure, create onboarding campaigns, exclusive new-user perks, or customer care follow-ups in the first 3–6 months.
+
+3. **Review Pricing Strategy**
+   - High monthly charges are linked to increased churn. Consider:
+     - Bundling services to increase perceived value.
+     - Tiered pricing with value-added services.
+     - Monitoring competitor pricing closely.
+
+4. **Churn Risk Scoring**
+   - Use this model in a dashboard to proactively flag high-risk customers for personalized retention efforts (e.g., call center outreach, email offers).
+
+By addressing these areas, the business can build stronger customer relationships, reduce revenue loss from churn, and improve long-term loyalty.
+
