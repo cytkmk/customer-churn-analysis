@@ -30,7 +30,7 @@ This project uses logistic regression to predict customer churn based on service
 
 ## 🔗 Report
 
-👉 [Click here to view the full interactive HTML report](link-to-your-html-file)
+👉 [Click here to view the full interactive HTML report](https://github.com/cytkmk/customer-churn-analysis/blob/main/churn_analysis_report.html)
 
 ---
 
